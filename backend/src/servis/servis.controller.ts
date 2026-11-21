@@ -11,7 +11,7 @@ import {
 import { ServisService } from './servis.service.js';
 import { CreateServisDto } from './dto/create-servis.dto.js';
 import { UpdateServisDto } from './dto/update-servis.dto.js';
-import { Servis } from './entities/servis.entity.js';
+import type { Servis } from '@prisma/client';
 
 @Controller('servis')
 export class ServisController {

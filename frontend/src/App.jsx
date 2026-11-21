@@ -15,8 +15,8 @@ import "./App.css";
 
 /**
  * Komponen Utama: App
- * Mengelola state global dan alur integrasi Backend NestJS (MVC)
- * untuk seluruh operasi CRUD aplikasi Bengkelin (Modul 9).
+ * Mengelola state global dan alur integrasi Backend NestJS + Prisma ORM
+ * untuk seluruh operasi CRUD aplikasi Bengkelin (Modul 10).
  */
 export default function App() {
   const [daftarServis, setDaftarServis] = useState([]);

@@ -1,7 +1,7 @@
 /**
  * Layanan API Bengkelin
  * Berisi konfigurasi endpoint API Publik DummyJSON (Week 7)
- * dan RESTful API Backend NestJS (Week 9 - Modul 9).
+ * dan RESTful API Backend NestJS + PostgreSQL Prisma ORM (Week 10 - Modul 10).
  */
 
 export const URL_REFERENSI_MOTOR = "https://dummyjson.com/products/category/motorcycle";

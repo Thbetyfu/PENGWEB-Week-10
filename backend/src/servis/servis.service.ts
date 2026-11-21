@@ -3,11 +3,10 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import { JenisMotor, Prisma, StatusServis } from '@prisma/client';
+import { JenisMotor, Prisma, Servis, StatusServis } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateServisDto } from './dto/create-servis.dto.js';
 import { UpdateServisDto } from './dto/update-servis.dto.js';
-import { Servis } from './entities/servis.entity.js';
 
 @Injectable()
 export class ServisService {
@@ -109,12 +108,31 @@ export class ServisService {
     await this.findOne(id);
 
     const dataUpdate: Prisma.ServisUpdateInput = {
-      ...updateServisDto,
+      ...(updateServisDto.kendaraan !== undefined && {
+        kendaraan: updateServisDto.kendaraan.trim(),
+      }),
+      ...(updateServisDto.platNomor !== undefined && {
+        platNomor: updateServisDto.platNomor.trim().toUpperCase(),
+      }),
+      ...(updateServisDto.jenisMotor !== undefined && {
+        jenisMotor: updateServisDto.jenisMotor as JenisMotor,
+      }),
+      ...(updateServisDto.bengkel !== undefined && {
+        bengkel: updateServisDto.bengkel.trim(),
+      }),
+      ...(updateServisDto.layanan !== undefined && {
+        layanan: updateServisDto.layanan.trim(),
+      }),
+      ...(updateServisDto.biaya !== undefined && {
+        biaya: updateServisDto.biaya,
+      }),
+      ...(updateServisDto.tanggal !== undefined && {
+        tanggal: updateServisDto.tanggal,
+      }),
+      ...(updateServisDto.status !== undefined && {
+        status: updateServisDto.status as StatusServis,
+      }),
     };
-
-    if (updateServisDto.platNomor) {
-      dataUpdate.platNomor = updateServisDto.platNomor.trim().toUpperCase();
-    }
 
     return this.prisma.servis.update({
       where: { id },
