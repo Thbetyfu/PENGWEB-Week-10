@@ -16,6 +16,9 @@
 
 Pada **Tugas Perkuliahan Pekan 10**, backend RESTful API **NestJS** telah dihubungkan ke basis data relasional **PostgreSQL** menggunakan **Prisma ORM** melalui `PrismaService` dan `PrismaModule` (menggantikan penyimpanan *in-memory array* dari Pekan 9) sehingga seluruh data CRUD tersimpan secara permanen.
 
+> **Catatan Pembersihan Kode (Inisiatif Pribadi - Week 10):**  
+> Pada repositori Week 10 ini, seluruh *dead code*, aset template yang tidak terpakai, serta arsip file/screenshot lama dari Week 1 hingga Week 9 telah dihapus atas **inisiatif pribadi** (meskipun tidak diminta secara eksplisit dalam instruksi soal). Hal ini dilakukan karena penumpukan berkas dari pekan-pekan sebelumnya membuat struktur proyek membingungkan dan sulit dipahami saat fokus mengerjakan implementasi PostgreSQL & Prisma ORM di Week 10.
+
 ---
 
 ## Struktur Direktori Proyek
