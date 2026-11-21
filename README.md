@@ -100,4 +100,15 @@ npm run dev            # Frontend berjalan di http://localhost:5173
 ---
 
 ## Dokumentasi Screenshot (Week 10)
-Simpan hasil tangkapan layar tahapan migrasi Prisma, pengujian REST API, serta tampilan **Desktop** dan **Mobile** ke dalam folder `docs/screenshots/`.
+
+### 1. Tampilan Desktop Fullstack (Terhubung PostgreSQL via NestJS + Prisma)
+![Desktop Bengkelin Fullstack](docs/screenshots/01_desktop_bengkelin_fullstack.png)
+
+### 2. Tampilan Mobile Responsif
+![Mobile Bengkelin Responsive](docs/screenshots/02_mobile_bengkelin_responsive.png)
+
+### 3. Endpoint Query Lanjutan (`GET /servis/statistik` — Count & Aggregate)
+![API Statistik Prisma](docs/screenshots/03_api_statistik_prisma.png)
+
+### 4. Endpoint Daftar Servis (`GET /servis` — Data Persisten PostgreSQL)
+![API Servis PostgreSQL](docs/screenshots/04_api_servis_postgresql.png)
