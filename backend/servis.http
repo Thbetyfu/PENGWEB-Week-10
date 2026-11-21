@@ -1,0 +1,135 @@
+### ===============================================================
+### PENGUJIAN REST CLIENT - BENGKELIN API (NESTJS + PRISMA + POSTGRESQL)
+### Modul 10: Perancangan dan Pemrograman Web
+### Nama : Thoriq Abdurrohman Taqy
+### NIM  : 103022430006
+### Kelas: SE-48-04
+### ===============================================================
+
+@baseUrl = http://localhost:3001/servis
+
+### ---------------------------------------------------------------
+### 0. GET STATISTIK SERVIS (Query Lanjutan: Count & Aggregate)
+### ---------------------------------------------------------------
+GET {{baseUrl}}/statistik HTTP/1.1
+Accept: application/json
+
+###
+
+### ---------------------------------------------------------------
+### 1. GET ALL SERVIS (Menampilkan Seluruh Riwayat / Antrean Servis)
+### ---------------------------------------------------------------
+GET {{baseUrl}} HTTP/1.1
+Accept: application/json
+
+###
+
+### ---------------------------------------------------------------
+### 1B. GET FILTER SERVIS (Filter Status = Dijadwalkan)
+### ---------------------------------------------------------------
+GET {{baseUrl}}?status=Dijadwalkan HTTP/1.1
+Accept: application/json
+
+###
+
+### ---------------------------------------------------------------
+### 2. GET SERVIS BY ID - BERHASIL (Mencari Data Servis Valid: SRV-101)
+### ---------------------------------------------------------------
+GET {{baseUrl}}/SRV-101 HTTP/1.1
+Accept: application/json
+
+###
+
+### ---------------------------------------------------------------
+### 3. GET SERVIS BY ID - ERROR 404 NOT FOUND (Skenario Error 1)
+### ---------------------------------------------------------------
+GET {{baseUrl}}/SRV-999 HTTP/1.1
+Accept: application/json
+
+###
+
+### ---------------------------------------------------------------
+### 4. POST CREATE SERVIS - BERHASIL 201 CREATED (Menambah Servis Baru)
+### ---------------------------------------------------------------
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "kendaraan": "Kawasaki Ninja ZX-25R",
+  "platNomor": "B 1908 KAW",
+  "jenisMotor": "Konvensional",
+  "bengkel": "Kawasaki Super Service Bandung",
+  "layanan": "Servis Injeksi & Ganti Oli Motul",
+  "biaya": 320000,
+  "tanggal": "2026-11-15",
+  "status": "Dijadwalkan"
+}
+
+###
+
+### ---------------------------------------------------------------
+### 5. POST CREATE SERVIS - ERROR 409 CONFLICT (Skenario Error 2 Duplikat)
+### Mengirim plat nomor dan tanggal yang sama persis
+### ---------------------------------------------------------------
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "kendaraan": "Kawasaki Ninja ZX-25R",
+  "platNomor": "B 1908 KAW",
+  "jenisMotor": "Konvensional",
+  "bengkel": "Kawasaki Super Service Bandung",
+  "layanan": "Pengecekan Ulang",
+  "biaya": 150000,
+  "tanggal": "2026-11-15",
+  "status": "Dijadwalkan"
+}
+
+###
+
+### ---------------------------------------------------------------
+### 6. POST CREATE SERVIS - ERROR 400 BAD REQUEST (Validasi DTO class-validator)
+### Field kosong, jenisMotor tidak valid, biaya di bawah minimum
+### ---------------------------------------------------------------
+POST {{baseUrl}} HTTP/1.1
+Content-Type: application/json
+
+{
+  "kendaraan": "Mo",
+  "platNomor": "",
+  "jenisMotor": "BensinBiasa",
+  "bengkel": "",
+  "layanan": "",
+  "biaya": 5000,
+  "tanggal": "bukan-tanggal-valid"
+}
+
+###
+
+### ---------------------------------------------------------------
+### 7. PATCH UPDATE SERVIS - BERHASIL 200 OK (Mengubah Status & Biaya)
+### ---------------------------------------------------------------
+PATCH {{baseUrl}}/SRV-102 HTTP/1.1
+Content-Type: application/json
+
+{
+  "status": "Selesai",
+  "biaya": 135000,
+  "layanan": "Pemeriksaan BMS, Penggantian Modul Cell & Diagnostic Baterai"
+}
+
+###
+
+### ---------------------------------------------------------------
+### 8. DELETE SERVIS - BERHASIL 200 OK (Menghapus Data Servis SRV-104)
+### ---------------------------------------------------------------
+DELETE {{baseUrl}}/SRV-104 HTTP/1.1
+Accept: application/json
+
+###
+
+### ---------------------------------------------------------------
+### 9. DELETE SERVIS - ERROR 404 NOT FOUND (Menghapus ID yang Tidak Ada)
+### ---------------------------------------------------------------
+DELETE {{baseUrl}}/SRV-999 HTTP/1.1
+Accept: application/json

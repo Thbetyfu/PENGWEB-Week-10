@@ -1,0 +1,15 @@
+{
+  "name": "bengkelin-fullstack-prisma",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Bengkelin Fullstack App — React Frontend (FE) & NestJS + PostgreSQL + Prisma ORM Backend (BE) untuk Tugas Perkuliahan Pekan 10",
+  "author": "Thoriq Abdurrohman Taqy (103022430006)",
+  "scripts": {
+    "start:backend": "node backend/dist/src/main.js",
+    "dev:backend": "npm --prefix backend run start:dev",
+    "build:backend": "npm --prefix backend run build",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "build:frontend": "npm --prefix frontend run build",
+    "build:all": "npm --prefix backend run build && npm --prefix frontend run build"
+  }
+}
