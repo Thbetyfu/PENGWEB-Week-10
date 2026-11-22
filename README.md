@@ -16,6 +16,8 @@ penggunaan AI :
 
 1. gemini untuk membuat readme.md saja dan dokumentasi
 
+deathcode dari week sebelumnya sudah saya hapusin karena bikin bingun jadi gado gado kode saya
+
 Bengkelin adalah aplikasi web untuk mengelola antrean pemesanan jadwal servis, estimasi biaya, pemilihan bengkel mitra, dan riwayat perawatan berkala sepeda motor bermesin konvensional maupun motor listrik (*Electric Vehicle / EV*).
 
 Pada Tugas Perkuliahan Pekan 10, backend RESTful API NestJS telah dihubungkan ke basis data relasional PostgreSQL menggunakan Prisma ORM melalui `PrismaService` dan `PrismaModule` (menggantikan penyimpanan *in-memory array* dari Pekan 9) sehingga seluruh data CRUD tersimpan secara permanen.
