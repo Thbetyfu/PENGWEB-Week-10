@@ -1,14 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import helmet from 'helmet';
 import { AppModule } from './app.module.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Mengaktifkan CORS agar frontend dapat berkomunikasi dengan backend
+  // Memasang HTTP security headers (X-Content-Type-Options, X-Frame-Options, dll.)
+  app.use(helmet());
+
+  // Mengaktifkan CORS secara spesifik untuk origin frontend yang diizinkan
+  const allowedOrigin = process.env.CORS_ORIGIN ?? 'http://localhost:5173';
   app.enableCors({
-    origin: '*',
+    origin: allowedOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: 'Content-Type, Authorization',
     credentials: true,
   });
 
@@ -24,6 +30,7 @@ async function bootstrap() {
   const port = process.env.PORT ?? 3001;
   await app.listen(port);
   console.log(`[Bengkelin Backend] Server berjalan di http://localhost:${port}`);
-  console.log(`[Bengkelin Backend] Endpoint Servis: http://localhost:${port}/servis`);
+  console.log(`[Bengkelin Backend] Endpoint Auth: http://localhost:${port}/auth`);
+  console.log(`[Bengkelin Backend] Endpoint Servis (JWT Protected): http://localhost:${port}/servis`);
 }
 await bootstrap();

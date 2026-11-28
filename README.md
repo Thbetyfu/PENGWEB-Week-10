@@ -6,82 +6,27 @@
 - **Program Studi:** S1 Rekayasa Perangkat Lunak (Software Engineering)
 - **Mata Kuliah:** Perancangan dan Pemrograman Web (CCK3DAB3)
 - **Nama Aplikasi:** **Bengkelin** (Sistem Manajemen Servis Motor Konvensional & Motor Listrik)
-- **Repositori GitHub:** [https://github.com/Thbetyfu/PENGWEB-Week-10](https://github.com/Thbetyfu/PENGWEB-Week-10)
 
 ---
 
-# Bengkelin Fullstack Monorepo (NestJS + PostgreSQL + Prisma ORM + React)
+# Bengkelin Fullstack (Pekan 11: JWT Auth + Keamanan Dasar)
 
-penggunaan AI :
-
-1. gemini untuk membuat readme.md saja dan dokumentasi
-
-deathcode dari week sebelumnya sudah saya hapusin karena bikin bingun jadi gado gado kode saya
-
-Bengkelin adalah aplikasi web untuk mengelola antrean pemesanan jadwal servis, estimasi biaya, pemilihan bengkel mitra, dan riwayat perawatan berkala sepeda motor bermesin konvensional maupun motor listrik (*Electric Vehicle / EV*).
-
-Pada Tugas Perkuliahan Pekan 10, backend RESTful API NestJS telah dihubungkan ke basis data relasional PostgreSQL menggunakan Prisma ORM melalui `PrismaService` dan `PrismaModule` (menggantikan penyimpanan *in-memory array* dari Pekan 9) sehingga seluruh data CRUD tersimpan secara permanen.
-
-> **Catatan Pembersihan Kode (Inisiatif Pribadi - Week 10):**
-> Pada repositori Week 10 ini, seluruh *dead code*, aset template yang tidak terpakai, serta arsip file/screenshot lama dari Week 1 hingga Week 9 telah dihapus atas **inisiatif pribadi** (meskipun tidak diminta secara eksplisit dalam instruksi soal). Hal ini dilakukan karena penumpukan berkas dari pekan-pekan sebelumnya membuat struktur proyek membingungkan dan sulit dipahami saat fokus mengerjakan implementasi PostgreSQL & Prisma ORM di Week 10.
+Proyek ini adalah pengembangan dari aplikasi **Bengkelin** (NestJS + PostgreSQL + Prisma ORM + React) dengan penambahan sistem autentikasi **JWT Bearer**, hashing password menggunakan **bcrypt**, **Security Headers (Helmet)**, dan **Rate Limiting (`@nestjs/throttler`)**.
 
 ---
 
-## Struktur Direktori Proyek
+## Fitur Keamanan & Autentikasi (Pekan 11)
 
-```text
-PENGWEB-Week-10/
-├── backend/                        # [BE] NestJS + Prisma ORM + PostgreSQL (Port 3001)
-│   ├── prisma/
-│   │   ├── migrations/             # Riwayat migrasi DDL PostgreSQL
-│   │   └── schema.prisma           # Model Servis, enum JenisMotor & StatusServis
-│   ├── src/
-│   │   ├── prisma/
-│   │   │   ├── prisma.module.ts    # Modul global Prisma
-│   │   │   └── prisma.service.ts   # Provider koneksi PrismaClient (OnModuleInit)
-│   │   ├── servis/
-│   │   │   ├── dto/                # Validasi input (class-validator)
-│   │   │   ├── servis.controller.ts
-│   │   │   ├── servis.module.ts
-│   │   │   └── servis.service.ts   # Operasi CRUD & Statistik via Prisma Client
-│   │   ├── app.module.ts
-│   │   └── main.ts                 # Bootstrap, CORS, dan ValidationPipe global
-│   ├── .env.example                # Template variabel environment DATABASE_URL
-│   ├── package.json
-│   └── servis.http                 # Skrip pengujian REST Client
-│
-├── frontend/                       # [FE] React 19 + Vite (Port 5173)
-│   ├── public/
-│   │   └── favicon.svg
-│   └── src/
-│       ├── components/             # Komponen UI modular
-│       ├── data/                   # Helper formatRupiah & fallback offline
-│       ├── services/api.js         # Fetch API ke Backend NestJS & DummyJSON
-│       ├── App.jsx
-│       ├── App.css
-│       ├── index.css
-│       └── main.jsx
-│
-├── docs/
-│   └── screenshots/                # Dokumentasi screenshot Week 10 (Desktop, Mobile, Prisma)
-│
-├── .gitignore
-├── package.json
-└── README.md
-```
-
----
-
-## Daftar Endpoint REST API (`/servis`)
-
-| Method     | Endpoint              | Deskripsi                                                                                                                              |
-| :--------- | :-------------------- | :------------------------------------------------------------------------------------------------------------------------------------- |
-| `GET`    | `/servis`           | Mengambil seluruh daftar servis (mendukung query `?status=` & `?jenisMotor=`)                                                      |
-| `GET`    | `/servis/statistik` | **Query Lanjutan:** Menghitung total servis, jumlah per status/jenis motor (`count`), dan total estimasi biaya (`aggregate`) |
-| `GET`    | `/servis/:id`       | Mengambil detail 1 data servis berdasarkan UUID                                                                                        |
-| `POST`   | `/servis`           | Menambahkan jadwal servis baru ke PostgreSQL (validasi DTO + cek duplikat `409 Conflict`)                                            |
-| `PATCH`  | `/servis/:id`       | Memperbarui data/status servis secara parsial di PostgreSQL                                                                            |
-| `DELETE` | `/servis/:id`       | Menghapus data servis secara permanen dari PostgreSQL                                                                                  |
+1. **Registrasi & Login (`POST /auth/register`, `POST /auth/login`)**
+   - Password di-hash dengan `bcrypt` (`saltRounds = 10`) sebelum disimpan ke tabel `users` di PostgreSQL.
+   - Login memverifikasi password dengan `bcrypt.compare` dan menerbitkan JWT `accessToken`.
+2. **Proteksi Endpoint Privat (`/servis/*`)**
+   - Seluruh endpoint CRUD `/servis` dilindungi oleh `JwtAuthGuard` (`Authorization: Bearer <token>`).
+   - Request tanpa token atau token tidak valid ditolak dengan status `401 Unauthorized`.
+3. **Security Headers & CORS**
+   - Menggunakan `helmet()` di `backend/src/main.ts` serta pembatasan CORS ke `http://localhost:5173`.
+4. **Rate Limiting**
+   - Menggunakan `@nestjs/throttler` dengan batas ketat pada `POST /auth/login` (maksimal 5 percobaan per 60 detik, mengembalikan `429 Too Many Requests` jika terlampaui).
 
 ---
 
@@ -92,9 +37,9 @@ PENGWEB-Week-10/
 ```bash
 cd backend
 npm install --legacy-peer-deps
-cp .env.example .env   # Sesuaikan DATABASE_URL PostgreSQL lokal Anda
-npx prisma migrate dev # Jalankan migrasi tabel servis
-npm run start:dev      # Backend berjalan di http://localhost:3001
+cp .env.example .env          # Sesuaikan DATABASE_URL & JWT_SECRET
+npx prisma migrate dev --name add_user_auth
+npm run start:dev             # Backend berjalan di http://localhost:3001
 ```
 
 ### 2. Menjalankan Frontend React
@@ -102,25 +47,11 @@ npm run start:dev      # Backend berjalan di http://localhost:3001
 ```bash
 cd frontend
 npm install
-npm run dev            # Frontend berjalan di http://localhost:5173
+npm run dev                   # Frontend berjalan di http://localhost:5173
 ```
 
 ---
 
-## Dokumentasi Screenshot (Week 10)
+## Dokumentasi Penjelasan Tugas
 
-### 1. Tampilan Desktop Fullstack (Terhubung PostgreSQL via NestJS + Prisma)
-
-![Desktop Bengkelin Fullstack](docs/screenshots/01_desktop_bengkelin_fullstack.png)
-
-### 2. Tampilan Mobile Responsif
-
-![Mobile Bengkelin Responsive](docs/screenshots/02_mobile_bengkelin_responsive.png)
-
-### 3. Endpoint Query Lanjutan (`GET /servis/statistik` — Count & Aggregate)
-
-![API Statistik Prisma](docs/screenshots/03_api_statistik_prisma.png)
-
-### 4. Endpoint Daftar Servis (`GET /servis` — Data Persisten PostgreSQL)
-
-![API Servis PostgreSQL](docs/screenshots/04_api_servis_postgresql.png)
+Penjelasan singkat (maksimal 1 halaman) untuk keperluan laporan pengumpulan tersedia di [docs/PENJELASAN_TUGAS_11.md](docs/PENJELASAN_TUGAS_11.md).

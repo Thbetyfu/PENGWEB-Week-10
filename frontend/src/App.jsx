@@ -1,46 +1,70 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "./components/Header";
+import AuthPanel from "./components/AuthPanel";
 import RingkasanStatistik from "./components/RingkasanStatistik";
 import FormTambahServis from "./components/FormTambahServis";
 import DaftarServis from "./components/DaftarServis";
 import ReferensiMotor from "./components/ReferensiMotor";
 import { dataServisAwal } from "./data/servisAwal";
 import {
-  fetchServisBackend,
+  clearAuthSession,
   createServisBackend,
-  updateServisBackend,
   deleteServisBackend,
+  fetchServisBackend,
+  getAuthToken,
+  getStoredUser,
+  updateServisBackend,
 } from "./services/api";
 import "./App.css";
 
 /**
  * Komponen Utama: App
- * Mengelola state global dan alur integrasi Backend NestJS + Prisma ORM
- * untuk seluruh operasi CRUD aplikasi Bengkelin (Modul 10).
+ * Mengelola state autentikasi JWT (Week 11) serta alur integrasi Backend NestJS + Prisma ORM
+ * untuk seluruh operasi CRUD aplikasi Bengkelin.
  */
 export default function App() {
+  const [token, setToken] = useState(() => getAuthToken());
+  const [user, setUser] = useState(() => getStoredUser());
   const [daftarServis, setDaftarServis] = useState([]);
-  const [loadingBackend, setLoadingBackend] = useState(true);
+  const [loadingBackend, setLoadingBackend] = useState(false);
   const [backendStatus, setBackendStatus] = useState("Menghubungkan ke NestJS API...");
   const [isBackendConnected, setIsBackendConnected] = useState(false);
   const [pesanNotifikasi, setPesanNotifikasi] = useState(null);
 
-  // Fungsi helper menampilkan notifikasi toast sederhana
-  const tampilkanNotifikasi = (pesan, tipe = "info") => {
+  const tampilkanNotifikasi = useCallback((pesan, tipe = "info") => {
     setPesanNotifikasi({ pesan, tipe });
     setTimeout(() => setPesanNotifikasi(null), 4000);
-  };
+  }, []);
 
-  // Muat data dari Backend NestJS saat aplikasi pertama kali dibuka (Mounting)
-  const muatDataDariBackend = async () => {
+  const handleLogout = useCallback(
+    (alasan) => {
+      clearAuthSession();
+      setToken(null);
+      setUser(null);
+      setDaftarServis([]);
+      setIsBackendConnected(false);
+      tampilkanNotifikasi(
+        typeof alasan === "string" ? alasan : "Anda telah keluar dari sesi.",
+        "info"
+      );
+    },
+    [tampilkanNotifikasi]
+  );
+
+  // Muat data dari Backend NestJS dengan header Authorization: Bearer <token>
+  const muatDataDariBackend = useCallback(async () => {
+    if (!token) return;
     setLoadingBackend(true);
     try {
       const data = await fetchServisBackend();
       setDaftarServis(data);
       setIsBackendConnected(true);
-      setBackendStatus("Terhubung ke NestJS API (http://localhost:3001/servis)");
-      tampilkanNotifikasi("Berhasil memuat data dari NestJS Backend", "success");
+      setBackendStatus("Terhubung ke NestJS API (JWT Authenticated)");
     } catch (err) {
+      if (err.status === 401) {
+        handleLogout("Sesi JWT berakhir atau tidak valid (401). Silakan login kembali.");
+        return;
+      }
       console.warn("Backend offline atau gagal:", err.message);
       setIsBackendConnected(false);
       setBackendStatus("Mode Offline / Fallback Lokal (Backend belum aktif di port 3001)");
@@ -49,17 +73,23 @@ export default function App() {
     } finally {
       setLoadingBackend(false);
     }
-  };
+  }, [token, handleLogout, tampilkanNotifikasi]);
 
   useEffect(() => {
-    muatDataDariBackend();
-  }, []);
+    if (token) {
+      muatDataDariBackend();
+    }
+  }, [token, muatDataDariBackend]);
+
+  const handleLoginSuccess = (data) => {
+    setToken(data.accessToken);
+    setUser(data.user);
+  };
 
   // Menambahkan servis baru via HTTP POST ke NestJS Backend
   const handleTambahServis = async (servisBaru) => {
     try {
       if (isBackendConnected) {
-        // Kirim payload ke NestJS API
         const payload = {
           kendaraan: servisBaru.kendaraan,
           platNomor: servisBaru.platNomor,
@@ -74,11 +104,14 @@ export default function App() {
         setDaftarServis((prev) => [hasil, ...prev]);
         tampilkanNotifikasi(`Servis baru ${hasil.id} berhasil ditambahkan ke Backend!`, "success");
       } else {
-        // Fallback lokal jika backend tidak terhubung
         setDaftarServis((prev) => [servisBaru, ...prev]);
         tampilkanNotifikasi("Data ditambahkan ke memori lokal.", "info");
       }
     } catch (err) {
+      if (err.status === 401) {
+        handleLogout("Sesi berakhir (401). Silakan login kembali.");
+        return;
+      }
       tampilkanNotifikasi(`Gagal menambah servis: ${err.message}`, "error");
       alert(`Validasi / Error Backend: ${err.message}`);
     }
@@ -98,6 +131,10 @@ export default function App() {
         tampilkanNotifikasi(`Data servis ${id} dihapus dari lokal.`, "info");
       }
     } catch (err) {
+      if (err.status === 401) {
+        handleLogout("Sesi berakhir (401). Silakan login kembali.");
+        return;
+      }
       tampilkanNotifikasi(`Gagal menghapus data: ${err.message}`, "error");
     }
   };
@@ -122,68 +159,25 @@ export default function App() {
         );
       }
     } catch (err) {
+      if (err.status === 401) {
+        handleLogout("Sesi berakhir (401). Silakan login kembali.");
+        return;
+      }
       tampilkanNotifikasi(`Gagal memperbarui status: ${err.message}`, "error");
     }
   };
 
-  // Refresh data langsung dari backend
   const handleRefreshData = () => {
     muatDataDariBackend();
   };
 
-  // Mengosongkan data untuk keperluan demonstrasi conditional rendering empty state
   const handleKosongkanData = () => {
     setDaftarServis([]);
   };
 
   return (
     <div className="app-layout">
-      <Header />
-
-      {/* Banner Integrasi Backend NestJS (Tugas Pekan 9) */}
-      <div
-        style={{
-          background: isBackendConnected ? "#ecfdf5" : "#fffbeb",
-          borderBottom: `2px solid ${isBackendConnected ? "#10b981" : "#f59e0b"}`,
-          padding: "10px 24px",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          fontSize: "14px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span
-            style={{
-              display: "inline-block",
-              width: "12px",
-              height: "12px",
-              borderRadius: "50%",
-              background: isBackendConnected ? "#10b981" : "#f59e0b",
-            }}
-          />
-          <strong style={{ color: isBackendConnected ? "#065f46" : "#92400e" }}>
-            Status Fullstack:
-          </strong>
-          <span style={{ color: "#374151" }}>{backendStatus}</span>
-        </div>
-        <button
-          type="button"
-          onClick={handleRefreshData}
-          style={{
-            background: "#2563eb",
-            color: "#fff",
-            border: "none",
-            borderRadius: "6px",
-            padding: "4px 12px",
-            cursor: "pointer",
-            fontWeight: "500",
-            fontSize: "12px",
-          }}
-        >
-          Muat Ulang dari Backend
-        </button>
-      </div>
+      <Header user={user} onLogout={() => handleLogout("Anda telah keluar dari sesi.")} />
 
       {/* Toast Notifikasi Feedback Operasi */}
       {pesanNotifikasi && (
@@ -211,54 +205,104 @@ export default function App() {
         </div>
       )}
 
-      <main className="main-content">
-        <div className="content-container">
-          {/* Komponen 2: Ringkasan Statistik */}
-          <RingkasanStatistik daftarServis={daftarServis} />
-
-          {/* Panel demonstrasi pengujian */}
-          <div className="demo-toolbar">
-            <span className="demo-label">Opsi Pengujian Backend & UI:</span>
+      {!token ? (
+        <main className="main-content">
+          <AuthPanel
+            onLoginSuccess={handleLoginSuccess}
+            onNotify={tampilkanNotifikasi}
+          />
+        </main>
+      ) : (
+        <>
+          <div
+            style={{
+              background: isBackendConnected ? "#ecfdf5" : "#fffbeb",
+              borderBottom: `2px solid ${isBackendConnected ? "#10b981" : "#f59e0b"}`,
+              padding: "10px 24px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              fontSize: "14px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span
+                style={{
+                  display: "inline-block",
+                  width: "12px",
+                  height: "12px",
+                  borderRadius: "50%",
+                  background: isBackendConnected ? "#10b981" : "#f59e0b",
+                }}
+              />
+              <strong style={{ color: isBackendConnected ? "#065f46" : "#92400e" }}>
+                Status Fullstack:
+              </strong>
+              <span style={{ color: "#374151" }}>{backendStatus}</span>
+            </div>
             <button
               type="button"
-              className="btn-text-action"
-              onClick={handleKosongkanData}
-              title="Kosongkan seluruh data untuk menguji conditional rendering"
-            >
-              Kosongkan Data (Uji Empty State)
-            </button>
-            <span className="demo-sep">|</span>
-            <button
-              type="button"
-              className="btn-text-action"
               onClick={handleRefreshData}
-              title="Ambil ulang data dari backend NestJS"
+              style={{
+                background: "#2563eb",
+                color: "#fff",
+                border: "none",
+                borderRadius: "6px",
+                padding: "4px 12px",
+                cursor: "pointer",
+                fontWeight: "500",
+                fontSize: "12px",
+              }}
             >
-              Ambil Ulang Data Backend
+              Muat Ulang dari Backend
             </button>
           </div>
 
-          {/* Komponen 3: Form Tambah Servis (Controlled Component) */}
-          <FormTambahServis onTambahServis={handleTambahServis} />
+          <main className="main-content">
+            <div className="content-container">
+              <RingkasanStatistik daftarServis={daftarServis} />
 
-          {/* Komponen 5: Daftar Servis (Container List & Conditional Rendering) */}
-          {loadingBackend ? (
-            <div style={{ textAlign: "center", padding: "40px", color: "#6b7280" }}>
-              Memuat data antrean servis dari Backend NestJS...
+              <div className="demo-toolbar">
+                <span className="demo-label">Opsi Pengujian Backend &amp; UI:</span>
+                <button
+                  type="button"
+                  className="btn-text-action"
+                  onClick={handleKosongkanData}
+                  title="Kosongkan seluruh data untuk menguji conditional rendering"
+                >
+                  Kosongkan Data (Uji Empty State)
+                </button>
+                <span className="demo-sep">|</span>
+                <button
+                  type="button"
+                  className="btn-text-action"
+                  onClick={handleRefreshData}
+                  title="Ambil ulang data dari backend NestJS"
+                >
+                  Ambil Ulang Data Backend
+                </button>
+              </div>
+
+              <FormTambahServis onTambahServis={handleTambahServis} />
+
+              {loadingBackend ? (
+                <div style={{ textAlign: "center", padding: "40px", color: "#6b7280" }}>
+                  Memuat data antrean servis dari Backend NestJS...
+                </div>
+              ) : (
+                <DaftarServis
+                  daftarServis={daftarServis}
+                  onHapusServis={handleHapusServis}
+                  onToggleStatus={handleToggleStatus}
+                  onResetSampel={handleRefreshData}
+                />
+              )}
+
+              <ReferensiMotor />
             </div>
-          ) : (
-            <DaftarServis
-              daftarServis={daftarServis}
-              onHapusServis={handleHapusServis}
-              onToggleStatus={handleToggleStatus}
-              onResetSampel={handleRefreshData}
-            />
-          )}
-
-          {/* Komponen 6: Referensi Model Motor (data dari API eksternal DummyJSON, Tugas 7) */}
-          <ReferensiMotor />
-        </div>
-      </main>
+          </main>
+        </>
+      )}
 
       <footer className="app-footer">
         <p>Bengkelin Fullstack MVC &copy; Dikembangkan oleh Thoriq (NIM: 103022430006)</p>

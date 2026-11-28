@@ -7,12 +7,15 @@ import {
   Param,
   Delete,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ServisService } from './servis.service.js';
 import { CreateServisDto } from './dto/create-servis.dto.js';
 import { UpdateServisDto } from './dto/update-servis.dto.js';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import type { Servis } from '@prisma/client';
 
+@UseGuards(JwtAuthGuard)
 @Controller('servis')
 export class ServisController {
   // Dependency Injection melalui constructor, tidak membuat instance ServisService secara manual

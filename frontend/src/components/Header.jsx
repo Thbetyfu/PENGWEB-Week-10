@@ -1,8 +1,8 @@
 /**
  * Komponen 1: Header
- * Berfungsi menampilkan identitas brand aplikasi Bengkelin dan metadata pengguna.
+ * Menampilkan identitas brand aplikasi Bengkelin, informasi pengguna yang login, dan tombol keluar.
  */
-export default function Header() {
+export default function Header({ user, onLogout }) {
   return (
     <header className="app-header">
       <div className="header-container">
@@ -18,7 +18,18 @@ export default function Header() {
           </div>
         </div>
         <div className="header-meta">
-          <span className="user-profile">Thoriq | 103022430006</span>
+          {user ? (
+            <div className="header-user-actions">
+              <span className="user-profile">
+                {user.nama} ({user.email})
+              </span>
+              <button type="button" className="btn-logout" onClick={onLogout}>
+                Keluar
+              </button>
+            </div>
+          ) : (
+            <span className="user-profile">Thoriq | 103022430006</span>
+          )}
         </div>
       </div>
     </header>

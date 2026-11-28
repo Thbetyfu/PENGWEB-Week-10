@@ -17,6 +17,17 @@ enum StatusServis {
   Selesai
 }
 
+model User {
+  id        String   @id @default(uuid())
+  nama      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
 model Servis {
   id         String       @id @default(uuid())
   kendaraan  String
