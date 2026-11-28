@@ -13,6 +13,11 @@
 
 Proyek ini adalah pengembangan dari aplikasi **Bengkelin** (NestJS + PostgreSQL + Prisma ORM + React) dengan penambahan sistem autentikasi **JWT Bearer**, hashing password menggunakan **bcrypt**, **Security Headers (Helmet)**, dan **Rate Limiting (`@nestjs/throttler`)**.
 
+
+Penggunaan AI week ini : -
+
+tools yang di gunakan: Vs code dan choreme saja
+
 ---
 
 ## Fitur Keamanan & Autentikasi (Pekan 11)
